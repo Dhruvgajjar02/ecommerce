@@ -8,29 +8,33 @@ const Spinner = ({ path = "login" }) => {
 
   useEffect(() => {
     const interval = setInterval(() => {
-      setCount((prevValue) => --prevValue);
+      setCount((prev) => prev - 1);
     }, 1000);
-    count === 0 &&
+
+    return () => clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
+    if (count === 0) {
       navigate(`/${path}`, {
         state: location.pathname,
       });
-    return () => clearInterval(interval); //cleanup
+    }
   }, [count, navigate, location, path]);
+
   return (
-    <>
-      <div
-        className="d-flex flex-column justify-content-center align-items-center"
-        style={{ height: "100vh" }}
-      >
-        <h1 className="Text-center " style={{ height: "10vh" }}>
-          {" "}
-          Re-directing to you in {count}second
-        </h1>
-        <div className="spinner-border" role="status">
-          <span className="visually-hidden">Loading...</span>
-        </div>
+    <div
+      className="d-flex flex-column justify-content-center align-items-center"
+      style={{ height: "100vh" }}
+    >
+      <h1 style={{ height: "10vh" }}>
+        Redirecting you in {count} seconds
+      </h1>
+
+      <div className="spinner-border" role="status">
+        <span className="visually-hidden">Loading...</span>
       </div>
-    </>
+    </div>
   );
 };
 

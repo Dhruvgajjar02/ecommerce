@@ -6,7 +6,7 @@ import { Checkbox, Radio } from "antd";
 import { Prices } from "../components/Prices";
 import { useCart } from "../context/cart";
 import toast from "react-hot-toast";
-import { BiFontSize } from "react-icons/bi";
+// import { BiFontSize } from "react-icons/bi";
 
 const HomePage = () => {
   const navigate = useNavigate();
@@ -31,24 +31,20 @@ const HomePage = () => {
     }
   };
 
-  useEffect(() => {
-    getAllCategory();
-    getTotal();
-  }, []);
   //get products
   const getAllProducts = async () => {
     try {
       setLoading(true);
-      const { data } = await axios.get(`/api/v1/product/product-list/${page}`);
-      setLoading(false);
+      const { data } = await axios.get(`/api/v1/product/product-list/1`);
       setProducts(data.products);
+      setLoading(false);
     } catch (error) {
       setLoading(false);
       console.log(error);
     }
   };
 
-  //getTOtal COunt
+  //get total count
   const getTotal = async () => {
     try {
       const { data } = await axios.get("/api/v1/product/product-count");
@@ -58,17 +54,28 @@ const HomePage = () => {
     }
   };
 
+  // initial load
+  useEffect(() => {
+    getAllCategory();
+    getTotal();
+    getAllProducts();
+  }, []);
+
+  // load more when page changes
   useEffect(() => {
     if (page === 1) return;
     loadMore();
   }, [page]);
-  //load more
+
+  // load more
   const loadMore = async () => {
     try {
       setLoading(true);
-      const { data } = await axios.get(`/api/v1/product/product-list/${page}`);
+      const { data } = await axios.get(
+        `/api/v1/product/product-list/${page}`
+      );
+      setProducts((prev) => [...prev, ...data?.products]);
       setLoading(false);
-      setProducts([...products, ...data?.products]);
     } catch (error) {
       console.log(error);
       setLoading(false);
@@ -85,9 +92,14 @@ const HomePage = () => {
     }
     setChecked(all);
   };
+
+  // when filters cleared
   useEffect(() => {
-    if (!checked.length || !radio.length) getAllProducts();
-  }, [checked.length, getAllProducts, radio.length]);
+    if (!checked.length && !radio.length) {
+      setPage(1);
+      getAllProducts();
+    }
+  }, [checked.length, radio.length]);
 
   useEffect(() => {
     if (checked.length || radio.length) filterProduct();
@@ -97,13 +109,16 @@ const HomePage = () => {
   //get filterd product
   const filterProduct = async () => {
     try {
-      const { data } = await axios.post("/api/v1/product/product-filters", {
-        checked,
-        radio,
-      });
+      setLoading(true);
+      const { data } = await axios.post(
+        "/api/v1/product/product-filters",
+        { checked, radio }
+      );
       setProducts(data?.products);
+      setLoading(false);
     } catch (error) {
       console.log(error);
+      setLoading(false);
     }
   };
   return (
@@ -147,7 +162,7 @@ const HomePage = () => {
             {/* <h1 className="text-center">All Products</h1> */}
             <div className="d-flex flex-wrap">
               {products?.map((p) => (
-                <div className="card m-2" style={{ width: "18rem" }}>
+                <div key={p._id} className="card m-2" style={{ width: "18rem" }}>
                   <img
                     src={`/api/v1/product/product-photo/${p._id}`}
                     className="card"
@@ -198,7 +213,7 @@ const HomePage = () => {
                     setPage(page + 1);
                   }}
                 >
-                  {loading ? "Loading ..." : "Load-more"}
+                  {loading ? "Loading ..." : "Load More"}
                 </button>
               )}
             </div>
